@@ -1,0 +1,33 @@
+# Go Build Files
+*.exe
+*.out
+*.bin
+*.so
+*.dylib
+*.a
+
+# Log files
+*.log
+
+# Dependency directories
+vendor/
+
+# IDE configurations
+.idea/
+.vscode/
+
+# MacOS system files
+.DS_Store
+
+# Windows system files
+Thumbs.db
+
+# Temporary files
+*.swp
+*.bak
+*.tmp
+
+# Go modules files
+go.sum
+go.mod
+
