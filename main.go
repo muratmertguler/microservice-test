@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
 	"microservicetest/pkg/config"
 	_ "microservicetest/pkg/log"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -21,7 +24,35 @@ func main() {
 
 	zap.L().Info("starting server...")
 
-	app := fiber.New()
+	httpClient :=  &http.Client{
+		Transport: &http.Transport{
+			Dial: (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).Dial,
+			TLSHandshakeTimeout:   5 * time.Second,
+			ResponseHeaderTimeout: 5 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+		
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "http://www.google.com", nil)
+	if err != nil {
+		zap.L().Error("failed to create request", zap.Error(err)
+	)
+
+
+
+	app := fiber.New(fiber.Config{
+		IdleTimeout:  5 * time.Second,
+		ReadTimeout:  2 * time.Second,
+		WriteTimeout: 2 * time.Second,
+		Concurrency:  256 * 1024,
+	})
+
 	app.Get("/metrics", adaptor.HTTPHandler(promhttp.Handler()))
 	app.Get("/", func(c *fiber.Ctx) error {
 		zap.L().Info("server started")
